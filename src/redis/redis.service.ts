@@ -1,5 +1,6 @@
 import { Injectable, Inject } from '@nestjs/common';
 import Redis, { ReplyError } from 'ioredis';
+import { v4 as uuidv4 } from 'uuid';
 
 @Injectable()
 export class RedisService {
@@ -16,5 +17,14 @@ export class RedisService {
         throw err;
       }
     }
+  }
+
+  async setHash(prefix: string, data: Record<string, string>): Promise<string> {
+    const values = Object.entries(data).flat();
+    const id = uuidv4();
+
+    await this.redisClient.hmset(`${prefix}:${id}`, ...values);
+
+    return id;
   }
 }
