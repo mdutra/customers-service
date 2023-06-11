@@ -32,6 +32,35 @@ export class RedisService {
     return id;
   }
 
+  async updateHash(
+    prefix: string,
+    key: string,
+    data: Record<string, string>,
+  ): Promise<void> {
+    this.checkRedisStatus();
+
+    const values = Object.entries(data).flat();
+
+    await this.redisClient.hmset(`${prefix}:${key}`, ...values);
+  }
+
+  async moveAndUpdateHash(
+    prefix: string,
+    keySource: string,
+    keyTarget: string,
+    data: Record<string, string>,
+  ): Promise<void> {
+    this.checkRedisStatus();
+
+    const values = Object.entries(data).flat();
+
+    await this.redisClient
+      .multi()
+      .hmset(`${prefix}:${keyTarget}`, ...values)
+      .del(`${prefix}:${keySource}`)
+      .exec();
+  }
+
   private checkRedisStatus() {
     if (this.redisClient.status === 'reconnecting') {
       throw new BadGatewayException('Cache unavailable');
