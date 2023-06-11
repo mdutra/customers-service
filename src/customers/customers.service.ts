@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { RedisService } from '../redis/redis.service';
 import { CreateCustomerDto } from './dto/create-customer.dto';
 
@@ -7,7 +7,16 @@ export class CustomersService {
   constructor(private redisService: RedisService) {}
 
   async findOne(id: string) {
-    return this.redisService.getHash('customers', id);
+    const customer = await this.redisService.getHash('customers', id);
+
+    if (!Object.keys(customer).length) {
+      throw new NotFoundException();
+    }
+
+    return {
+      id,
+      ...customer,
+    };
   }
 
   async create(createCustomerDto: CreateCustomerDto): Promise<any> {
