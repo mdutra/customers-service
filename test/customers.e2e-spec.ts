@@ -138,6 +138,8 @@ describe('/customers (e2e)', () => {
     });
 
     it('should update customer ID and customer data', async () => {
+      redisMock.hgetall.mockReturnValueOnce({ name: 'abc', document: '150' });
+      redisMock.hgetall.mockReturnValueOnce({});
       const id = uuid();
       const requestBody = { id: uuid(), name: 'foo bar', document: '200' };
 
@@ -148,6 +150,23 @@ describe('/customers (e2e)', () => {
       expect(response.status).toBe(200);
       expect(response.headers['content-type']).toMatch(/json/);
       expect(response.body).toEqual(requestBody);
+    });
+
+    it('should new ID with existing ID', async () => {
+      const id = uuid();
+      const requestBody = { id: uuid(), name: 'foo bar', document: '200' };
+
+      const response = await request(app.getHttpServer())
+        .put(`/customers/${id}`)
+        .send(requestBody);
+
+      expect(response.status).toBe(409);
+      expect(response.headers['content-type']).toMatch(/json/);
+      expect(response.body).toEqual({
+        error: 'Conflict',
+        message: `There's already a customer with id ${requestBody.id}`,
+        statusCode: 409,
+      });
     });
   });
 });

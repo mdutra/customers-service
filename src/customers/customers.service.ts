@@ -1,40 +1,43 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  ConflictException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { RedisService } from '../redis/redis.service';
 import { CreateCustomerDto } from './dto/create-customer.dto';
 import { UpdateCustomerDto } from './dto/update-customer.dto';
+import { CustomersRepository } from './customers.repository';
 
 @Injectable()
 export class CustomersService {
-  constructor(private redisService: RedisService) {}
+  constructor(
+    private redisService: RedisService,
+    private customersRepository: CustomersRepository,
+  ) {}
 
   async findOne(id: string) {
-    const customer = await this.redisService.getHash('customers', id);
+    const customer = await this.customersRepository.findById(id);
 
-    if (!Object.keys(customer).length) {
+    if (!customer) {
       throw new NotFoundException();
     }
 
-    return {
-      id,
-      ...customer,
-    };
+    return customer;
   }
 
   async create(createCustomerDto: CreateCustomerDto): Promise<any> {
-    const id = await this.redisService.setHash('customers', {
-      ...createCustomerDto,
-    });
-
-    return {
-      id,
-      ...createCustomerDto,
-    };
+    return this.customersRepository.create(createCustomerDto);
   }
 
   async update(id: string, updateCustomerDto: UpdateCustomerDto): Promise<any> {
     const customer = await this.findOne(id);
 
     if (updateCustomerDto?.id && updateCustomerDto.id !== customer.id) {
+      if (await this.exists(updateCustomerDto.id)) {
+        const message = `There's already a customer with id ${updateCustomerDto.id}`;
+        throw new ConflictException(message);
+      }
+
       const updatedCustomer = {
         ...customer,
         ...updateCustomerDto,
@@ -63,5 +66,11 @@ export class CustomersService {
         ...updateCustomerDto,
       };
     }
+  }
+
+  private async exists(id: string): Promise<boolean> {
+    const customer = await this.customersRepository.findById(id);
+
+    return !!customer;
   }
 }
