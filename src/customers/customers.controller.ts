@@ -6,10 +6,15 @@ import {
   Body,
   Put,
   ParseUUIDPipe,
+  UsePipes,
 } from '@nestjs/common';
 import { CustomersService } from './customers.service';
-import { CreateCustomerDto } from './dto/create-customer.dto';
+import {
+  CreateCustomerDto,
+  createCustomerSchema,
+} from './dto/create-customer.dto';
 import { UpdateCustomerDto } from './dto/update-customer.dto';
+import { JoiValidationPipe } from '../pipes/joi-validation.pipe';
 
 @Controller('customers')
 export class CustomersController {
@@ -21,6 +26,7 @@ export class CustomersController {
   }
 
   @Post()
+  @UsePipes(new JoiValidationPipe(createCustomerSchema))
   async create(@Body() createCustomerDto: CreateCustomerDto): Promise<void> {
     return this.customersService.create(createCustomerDto);
   }

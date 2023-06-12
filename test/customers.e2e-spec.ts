@@ -1,9 +1,9 @@
 import * as request from 'supertest';
 import { Test } from '@nestjs/testing';
+import { v4 as uuid } from 'uuid';
 import { CustomersModule } from '../src/customers/customers.module';
 import { INestApplication } from '@nestjs/common';
 import { redisMock } from './mock/redis.mock';
-import { v4 as uuid } from 'uuid';
 
 describe('/customers (e2e)', () => {
   let app: INestApplication;
@@ -70,6 +70,22 @@ describe('/customers (e2e)', () => {
       expect(response.body.id).toEqual(expect.any(String));
       expect(response.body.id.length).toBeGreaterThan(0);
       redisMock.hmset.mockClear();
+    });
+
+    it('should fail validation (400)', async () => {
+      const requestBody = { name: 123, document: '456' };
+
+      const response = await request(app.getHttpServer())
+        .post('/customers')
+        .send(requestBody);
+
+      expect(response.status).toBe(400);
+      expect(response.headers['content-type']).toMatch(/json/);
+      expect(response.body).toEqual({
+        error: 'Bad Request',
+        message: 'Validation failed',
+        statusCode: 400,
+      });
     });
   });
 
