@@ -2,29 +2,17 @@ import * as request from 'supertest';
 import { Test } from '@nestjs/testing';
 import { CustomersModule } from '../src/customers/customers.module';
 import { INestApplication } from '@nestjs/common';
+import { redisMock } from './mock/redis.mock';
 
 describe('/customers (e2e)', () => {
   let app: INestApplication;
-  const redisClient = {
-    status: '',
-    hgetall: jest.fn().mockReturnValue({
-      name: 'abc',
-      document: '123',
-    }),
-    hmset: jest.fn(),
-    multi: jest.fn().mockReturnValue({
-      hmset: jest.fn().mockReturnThis(),
-      del: jest.fn().mockReturnThis(),
-      exec: jest.fn(),
-    }),
-  };
 
   beforeAll(async () => {
     const moduleRef = await Test.createTestingModule({
       imports: [CustomersModule],
     })
       .overrideProvider('REDIS_CLIENT')
-      .useValue(redisClient)
+      .useValue(redisMock)
       .compile();
 
     app = moduleRef.createNestApplication();
@@ -45,14 +33,14 @@ describe('/customers (e2e)', () => {
 
       expect(response.status).toBe(200);
       expect(response.headers['content-type']).toMatch(/json/);
-      expect(redisClient.hgetall).toBeCalled();
-      expect(response.body).toEqual({ id, ...redisClient.hgetall() });
-      redisClient.hgetall.mockClear();
+      expect(redisMock.hgetall).toBeCalled();
+      expect(response.body).toEqual({ id, ...redisMock.hgetall() });
+      redisMock.hgetall.mockClear();
     });
 
     it('should not find customer by ID', async () => {
       const id = '456';
-      redisClient.hgetall.mockReturnValueOnce({});
+      redisMock.hgetall.mockReturnValueOnce({});
 
       const response = await request(app.getHttpServer()).get(
         `/customers/${id}`,
@@ -60,18 +48,14 @@ describe('/customers (e2e)', () => {
 
       expect(response.status).toBe(404);
       expect(response.headers['content-type']).toMatch(/json/);
-      expect(redisClient.hgetall).toBeCalled();
+      expect(redisMock.hgetall).toBeCalled();
       expect(response.body).toEqual({ message: 'Not Found', statusCode: 404 });
-      redisClient.hgetall.mockClear();
+      redisMock.hgetall.mockClear();
     });
 
     it('cache should be unavailable', async () => {
       const id = '456';
-      const status = jest.replaceProperty(
-        redisClient,
-        'status',
-        'reconnecting',
-      );
+      const status = jest.replaceProperty(redisMock, 'status', 'reconnecting');
 
       const response = await request(app.getHttpServer()).get(
         `/customers/${id}`,
@@ -79,7 +63,7 @@ describe('/customers (e2e)', () => {
 
       expect(response.status).toBe(502);
       expect(response.headers['content-type']).toMatch(/json/);
-      expect(redisClient.hgetall).not.toBeCalled();
+      expect(redisMock.hgetall).not.toBeCalled();
       expect(response.body).toEqual({
         error: 'Bad Gateway',
         statusCode: 502,
@@ -99,11 +83,11 @@ describe('/customers (e2e)', () => {
 
       expect(response.status).toBe(201);
       expect(response.headers['content-type']).toMatch(/json/);
-      expect(redisClient.hmset).toBeCalled();
+      expect(redisMock.hmset).toBeCalled();
       expect(response.body).toEqual(expect.objectContaining(requestBody));
       expect(response.body.id).toEqual(expect.any(String));
       expect(response.body.id.length).toBeGreaterThan(0);
-      redisClient.hmset.mockClear();
+      redisMock.hmset.mockClear();
     });
   });
 
@@ -127,7 +111,7 @@ describe('/customers (e2e)', () => {
     it('should not find customer when updating', async () => {
       const id = '456';
       const requestBody = { name: 'baz', document: '1000' };
-      redisClient.hgetall.mockReturnValueOnce({});
+      redisMock.hgetall.mockReturnValueOnce({});
 
       const response = await request(app.getHttpServer())
         .put(`/customers/${id}`)
