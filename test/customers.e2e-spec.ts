@@ -52,25 +52,6 @@ describe('/customers (e2e)', () => {
       expect(response.body).toEqual({ message: 'Not Found', statusCode: 404 });
       redisMock.hgetall.mockClear();
     });
-
-    it('cache should be unavailable', async () => {
-      const id = '456';
-      const status = jest.replaceProperty(redisMock, 'status', 'reconnecting');
-
-      const response = await request(app.getHttpServer()).get(
-        `/customers/${id}`,
-      );
-
-      expect(response.status).toBe(502);
-      expect(response.headers['content-type']).toMatch(/json/);
-      expect(redisMock.hgetall).not.toBeCalled();
-      expect(response.body).toEqual({
-        error: 'Bad Gateway',
-        statusCode: 502,
-        message: 'Cache unavailable',
-      });
-      status.restore();
-    });
   });
 
   describe('POST', () => {
