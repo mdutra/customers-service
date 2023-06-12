@@ -2,10 +2,13 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication } from '@nestjs/common';
 import { HttpService } from '@nestjs/axios';
 import * as request from 'supertest';
+import { v4 as uuid } from 'uuid';
 import { AppModule } from './../src/app.module';
 import { redisMock } from './mock/redis.mock';
 import { axiosMock } from './mock/axios.mock';
 import { AxiosError } from 'axios';
+
+const id = uuid();
 
 describe('general requests (e2e)', () => {
   let app: INestApplication;
@@ -26,7 +29,7 @@ describe('general requests (e2e)', () => {
 
   it('should authorize', () => {
     return request(app.getHttpServer())
-      .get('/customers/1')
+      .get(`/customers/${id}`)
       .set('Authorization', 'Bearer abc')
       .expect(200);
   });
@@ -35,7 +38,7 @@ describe('general requests (e2e)', () => {
     axiosMock.axiosRef.mockReturnValueOnce({ data: { active: false } });
 
     return request(app.getHttpServer())
-      .get('/customers/1')
+      .get(`/customers/${id}`)
       .set('Authorization', 'Bearer abc')
       .expect(401)
       .expect({ statusCode: 401, message: 'Unauthorized' });
@@ -43,7 +46,7 @@ describe('general requests (e2e)', () => {
 
   it('should not authorize (401) if token was not set', () => {
     return request(app.getHttpServer())
-      .get('/customers/1')
+      .get(`/customers/${id}`)
       .expect(401)
       .expect({ statusCode: 401, message: 'Unauthorized' });
   });
@@ -54,7 +57,7 @@ describe('general requests (e2e)', () => {
     });
 
     return request(app.getHttpServer())
-      .get('/customers/1')
+      .get(`/customers/${id}`)
       .set('Authorization', 'Bearer abc')
       .expect(502)
       .expect({
@@ -68,7 +71,7 @@ describe('general requests (e2e)', () => {
     const status = jest.replaceProperty(redisMock, 'status', 'reconnecting');
 
     const response = await request(app.getHttpServer())
-      .get(`/customers/1`)
+      .get(`/customers/${id}`)
       .set('Authorization', 'Bearer abc');
 
     expect(response.status).toBe(502);

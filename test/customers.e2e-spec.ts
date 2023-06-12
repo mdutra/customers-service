@@ -3,6 +3,7 @@ import { Test } from '@nestjs/testing';
 import { CustomersModule } from '../src/customers/customers.module';
 import { INestApplication } from '@nestjs/common';
 import { redisMock } from './mock/redis.mock';
+import { v4 as uuid } from 'uuid';
 
 describe('/customers (e2e)', () => {
   let app: INestApplication;
@@ -25,7 +26,7 @@ describe('/customers (e2e)', () => {
 
   describe('GET', () => {
     it('should find customer by ID', async () => {
-      const id = '456';
+      const id = uuid();
 
       const response = await request(app.getHttpServer()).get(
         `/customers/${id}`,
@@ -39,7 +40,7 @@ describe('/customers (e2e)', () => {
     });
 
     it('should not find customer by ID', async () => {
-      const id = '456';
+      const id = uuid();
       redisMock.hgetall.mockReturnValueOnce({});
 
       const response = await request(app.getHttpServer()).get(
@@ -74,7 +75,7 @@ describe('/customers (e2e)', () => {
 
   describe('PUT', () => {
     it('should update customer data', async () => {
-      const id = '456';
+      const id = uuid();
       const requestBody = { name: 'bar', document: '789' };
 
       const response = await request(app.getHttpServer())
@@ -90,7 +91,7 @@ describe('/customers (e2e)', () => {
     });
 
     it('should not find customer when updating', async () => {
-      const id = '456';
+      const id = uuid();
       const requestBody = { name: 'baz', document: '1000' };
       redisMock.hgetall.mockReturnValueOnce({});
 
@@ -104,8 +105,8 @@ describe('/customers (e2e)', () => {
     });
 
     it('should update customer ID and customer data', async () => {
-      const id = '2000';
-      const requestBody = { id: '3000', name: 'foo bar', document: '200' };
+      const id = uuid();
+      const requestBody = { id: uuid(), name: 'foo bar', document: '200' };
 
       const response = await request(app.getHttpServer())
         .put(`/customers/${id}`)
