@@ -13,7 +13,10 @@ import {
   CreateCustomerDto,
   createCustomerSchema,
 } from './dto/create-customer.dto';
-import { UpdateCustomerDto } from './dto/update-customer.dto';
+import {
+  UpdateCustomerDto,
+  updateCustomerSchema,
+} from './dto/update-customer.dto';
 import { JoiValidationPipe } from '../pipes/joi-validation.pipe';
 
 @Controller('customers')
@@ -32,6 +35,7 @@ export class CustomersController {
   }
 
   @Put(':id')
+  @UsePipes(new JoiValidationPipe(updateCustomerSchema))
   async update(
     @Param('id', ParseUUIDPipe) id: string,
     @Body() updateCustomerDto: UpdateCustomerDto,

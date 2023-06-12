@@ -106,6 +106,23 @@ describe('/customers (e2e)', () => {
       });
     });
 
+    it('should fail validation (400)', async () => {
+      const id = uuid();
+      const requestBody = { name: 'bar', document: 123 };
+
+      const response = await request(app.getHttpServer())
+        .put(`/customers/${id}`)
+        .send(requestBody);
+
+      expect(response.status).toBe(400);
+      expect(response.headers['content-type']).toMatch(/json/);
+      expect(response.body).toEqual({
+        error: 'Bad Request',
+        message: 'Validation failed',
+        statusCode: 400,
+      });
+    });
+
     it('should not find customer when updating', async () => {
       const id = uuid();
       const requestBody = { name: 'baz', document: '1000' };
