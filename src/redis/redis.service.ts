@@ -6,7 +6,7 @@ import { v4 as uuidv4 } from 'uuid';
 export class RedisService {
   constructor(@Inject('REDIS_CLIENT') private readonly redisClient: Redis) {}
 
-  async getHash(prefix: string, key: string): Promise<any> {
+  async getHash(prefix: string, key: string): Promise<Record<string, string>> {
     this.checkRedisStatus();
 
     try {
@@ -21,7 +21,7 @@ export class RedisService {
     }
   }
 
-  async setHash(prefix: string, data: Record<string, string>): Promise<string> {
+  async newHash(prefix: string, data: Record<string, string>): Promise<string> {
     this.checkRedisStatus();
 
     const values = Object.entries(data).flat();
@@ -32,33 +32,38 @@ export class RedisService {
     return id;
   }
 
-  async updateHash(
+  async updateContentsById(
     prefix: string,
-    key: string,
+    id: string,
     data: Record<string, string>,
-  ): Promise<void> {
+  ): Promise<Record<string, string>> {
     this.checkRedisStatus();
 
     const values = Object.entries(data).flat();
 
-    await this.redisClient.hmset(`${prefix}:${key}`, ...values);
+    await this.redisClient.hmset(`${prefix}:${id}`, ...values);
+
+    return data;
   }
 
-  async moveAndUpdateHash(
+  async overwriteHash(
     prefix: string,
-    keySource: string,
-    keyTarget: string,
-    data: Record<string, string>,
-  ): Promise<void> {
+    hashIdToDelete: string,
+    newId: string,
+    newData: Record<string, string>,
+  ): Promise<Record<string, string>> {
     this.checkRedisStatus();
 
-    const values = Object.entries(data).flat();
+    const values = Object.entries(newData).flat();
 
+    // Run del() + hmset() as an atomic operation
     await this.redisClient
       .multi()
-      .hmset(`${prefix}:${keyTarget}`, ...values)
-      .del(`${prefix}:${keySource}`)
+      .hmset(`${prefix}:${newId}`, ...values)
+      .del(`${prefix}:${hashIdToDelete}`)
       .exec();
+
+    return newData;
   }
 
   private checkRedisStatus() {

@@ -7,7 +7,7 @@ export const updateCustomerSchema = Joi.object({
 });
 
 export class UpdateCustomerDto {
-  id: string;
-  document: string;
-  name: string;
+  id?: string;
+  document?: string;
+  name?: string;
 }

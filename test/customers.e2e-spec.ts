@@ -152,7 +152,7 @@ describe('/customers (e2e)', () => {
       expect(response.body).toEqual(requestBody);
     });
 
-    it('should new ID with existing ID', async () => {
+    it('should conflict with existing ID', async () => {
       const id = uuid();
       const requestBody = { id: uuid(), name: 'foo bar', document: '200' };
 
@@ -163,8 +163,7 @@ describe('/customers (e2e)', () => {
       expect(response.status).toBe(409);
       expect(response.headers['content-type']).toMatch(/json/);
       expect(response.body).toEqual({
-        error: 'Conflict',
-        message: `There's already a customer with id ${requestBody.id}`,
+        message: 'Conflict',
         statusCode: 409,
       });
     });

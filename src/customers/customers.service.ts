@@ -30,47 +30,15 @@ export class CustomersService {
   }
 
   async update(id: string, updateCustomerDto: UpdateCustomerDto): Promise<any> {
-    const customer = await this.findOne(id);
+    const customer = await this.customersRepository.findByIdAndUpdate(
+      id,
+      updateCustomerDto,
+    );
 
-    if (updateCustomerDto?.id && updateCustomerDto.id !== customer.id) {
-      if (await this.exists(updateCustomerDto.id)) {
-        const message = `There's already a customer with id ${updateCustomerDto.id}`;
-        throw new ConflictException(message);
-      }
-
-      const updatedCustomer = {
-        ...customer,
-        ...updateCustomerDto,
-      };
-      delete updatedCustomer.id;
-
-      await this.redisService.moveAndUpdateHash(
-        'customers',
-        id,
-        updateCustomerDto.id,
-        updatedCustomer,
-      );
-
-      return {
-        id: updateCustomerDto.id,
-        ...updatedCustomer,
-      };
-    } else {
-      await this.redisService.updateHash('customers', id, {
-        ...updateCustomerDto,
-      });
-
-      return {
-        id,
-        ...customer,
-        ...updateCustomerDto,
-      };
+    if (!customer) {
+      throw new NotFoundException();
     }
-  }
 
-  private async exists(id: string): Promise<boolean> {
-    const customer = await this.customersRepository.findById(id);
-
-    return !!customer;
+    return customer;
   }
 }
