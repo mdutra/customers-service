@@ -6,11 +6,11 @@ import { v4 as uuidv4 } from 'uuid';
 export class RedisService {
   constructor(@Inject('REDIS_CLIENT') private readonly redisClient: Redis) {}
 
-  async getHash(prefix: string, key: string): Promise<Record<string, string>> {
+  async getHash<T>(prefix: string, key: string): Promise<T> {
     this.checkRedisStatus();
 
     try {
-      return this.redisClient.hgetall(`${prefix}:${key}`);
+      return this.redisClient.hgetall(`${prefix}:${key}`) as T;
     } catch (err) {
       if (err instanceof ReplyError) {
         console.warn(`type of ${key} is not a hash`);
@@ -32,26 +32,26 @@ export class RedisService {
     return id;
   }
 
-  async updateContentsById(
+  async updateContentsById<T>(
     prefix: string,
     id: string,
     data: Record<string, string>,
-  ): Promise<Record<string, string>> {
+  ): Promise<T> {
     this.checkRedisStatus();
 
     const values = Object.entries(data).flat();
 
     await this.redisClient.hmset(`${prefix}:${id}`, ...values);
 
-    return data;
+    return data as T;
   }
 
-  async overwriteHash(
+  async overwriteHash<T>(
     prefix: string,
     hashIdToDelete: string,
     newId: string,
     newData: Record<string, string>,
-  ): Promise<Record<string, string>> {
+  ): Promise<T> {
     this.checkRedisStatus();
 
     const values = Object.entries(newData).flat();
@@ -63,7 +63,7 @@ export class RedisService {
       .del(`${prefix}:${hashIdToDelete}`)
       .exec();
 
-    return newData;
+    return newData as T;
   }
 
   private checkRedisStatus() {

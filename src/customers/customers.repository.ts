@@ -2,13 +2,14 @@ import { Injectable, ConflictException } from '@nestjs/common';
 import { RedisService } from '../redis/redis.service';
 import { CreateCustomerDto } from './dto/create-customer.dto';
 import { UpdateCustomerDto } from './dto/update-customer.dto';
+import { Customer } from './customers.interface';
 
 @Injectable()
 export class CustomersRepository {
   constructor(private redisService: RedisService) {}
 
-  async findById(id: string) {
-    const customer = await this.redisService.getHash('customers', id);
+  async findById(id: string): Promise<Customer> {
+    const customer = await this.redisService.getHash<Customer>('customers', id);
 
     if (!Object.keys(customer).length) {
       return null;
@@ -17,7 +18,7 @@ export class CustomersRepository {
     return { id, ...customer };
   }
 
-  async create(createCustomerDto: CreateCustomerDto): Promise<any> {
+  async create(createCustomerDto: CreateCustomerDto): Promise<Customer> {
     const id = await this.redisService.newHash('customers', {
       ...createCustomerDto,
     });
@@ -28,7 +29,7 @@ export class CustomersRepository {
   async findByIdAndUpdate(
     id: string,
     updateCustomerDto: UpdateCustomerDto,
-  ): Promise<any> {
+  ): Promise<Customer> {
     const existingCustomer = await this.findById(id);
 
     if (!existingCustomer) {
@@ -41,10 +42,14 @@ export class CustomersRepository {
     }
 
     // update only the contents
-    const hash = await this.redisService.updateContentsById('customers', id, {
-      name: updateCustomerDto.name,
-      document: updateCustomerDto.document,
-    });
+    const hash = await this.redisService.updateContentsById<Customer>(
+      'customers',
+      id,
+      {
+        name: updateCustomerDto.name,
+        document: updateCustomerDto.document,
+      },
+    );
 
     return { id, ...hash };
   }
@@ -52,7 +57,7 @@ export class CustomersRepository {
   private async replaceContents(
     customerSource: UpdateCustomerDto,
     customerTarget: UpdateCustomerDto,
-  ): Promise<any> {
+  ): Promise<Customer> {
     await this.throwIfExists(customerTarget.id);
 
     const { id, name, document } = customerTarget;
@@ -62,7 +67,7 @@ export class CustomersRepository {
       document: document ? document : customerSource.document,
     };
 
-    const hash = await this.redisService.overwriteHash(
+    const hash = await this.redisService.overwriteHash<Customer>(
       'customers',
       customerSource.id,
       id,

@@ -1,21 +1,14 @@
-import {
-  ConflictException,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
-import { RedisService } from '../redis/redis.service';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreateCustomerDto } from './dto/create-customer.dto';
 import { UpdateCustomerDto } from './dto/update-customer.dto';
 import { CustomersRepository } from './customers.repository';
+import { Customer } from './customers.interface';
 
 @Injectable()
 export class CustomersService {
-  constructor(
-    private redisService: RedisService,
-    private customersRepository: CustomersRepository,
-  ) {}
+  constructor(private customersRepository: CustomersRepository) {}
 
-  async findOne(id: string) {
+  async findOne(id: string): Promise<Customer> {
     const customer = await this.customersRepository.findById(id);
 
     if (!customer) {
@@ -25,11 +18,14 @@ export class CustomersService {
     return customer;
   }
 
-  async create(createCustomerDto: CreateCustomerDto): Promise<any> {
+  async create(createCustomerDto: CreateCustomerDto): Promise<Customer> {
     return this.customersRepository.create(createCustomerDto);
   }
 
-  async update(id: string, updateCustomerDto: UpdateCustomerDto): Promise<any> {
+  async update(
+    id: string,
+    updateCustomerDto: UpdateCustomerDto,
+  ): Promise<Customer> {
     const customer = await this.customersRepository.findByIdAndUpdate(
       id,
       updateCustomerDto,
