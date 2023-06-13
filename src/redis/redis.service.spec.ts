@@ -7,7 +7,7 @@ import { ReplyError } from 'ioredis';
 describe('RedisService', () => {
   let service: RedisService;
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     const module: TestingModule = await Test.createTestingModule({
       imports: [RedisModule],
     })

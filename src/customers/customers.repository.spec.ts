@@ -9,7 +9,7 @@ describe('CustomersRepository', () => {
   let repository: CustomersRepository;
   let redisService: RedisService;
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     const module: TestingModule = await Test.createTestingModule({
       imports: [CustomersModule],
     }).compile();

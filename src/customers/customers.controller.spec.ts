@@ -7,7 +7,7 @@ describe('CustomersController', () => {
   let controller: CustomersController;
   let service: CustomersService;
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     const module: TestingModule = await Test.createTestingModule({
       imports: [CustomersModule],
     }).compile();
