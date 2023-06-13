@@ -44,7 +44,9 @@ export class AuthService {
         if (!err.response && err.request) {
           throw new BadGatewayException('SSO unavailable');
         }
-        throw new UnauthorizedException('Try updating authorization token');
+        throw new UnauthorizedException(
+          'Check the $SSO_CLIENT_SECRET and the Authorization token',
+        );
       }
 
       throw err;
