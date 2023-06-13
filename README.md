@@ -1,16 +1,16 @@
 # Customers Service
 
-## Execução para avaliação do projeto
+Tecnologias: Node.js, NestJS, TypeScript, ioredis e axios.
 
-Para auxíliar na avaliação desse projeto, siga as instruções para executar o servidor, os testes, ou qualquer outro comando com `node` e `npm`. Só precisará do `docker`.
-
-### Dependências:
+### Requisitos para execução:
 
 - Docker
 - `client_secret` do SSO (disponível no PDF da avaliação, pág 15)
 - Porta 3000 disponível
 
-### Execução dos containers
+## Execução para avaliação do projeto
+
+Para auxiliar na avaliação desse projeto, essas instruções permitem executar o servidor e os testes precisando ter apenas o `docker`.
 
 ```bash
 # Baixe a imagem Redis
@@ -35,10 +35,13 @@ $ docker build -t dev-image-1686647001746 -f Dockerfile.dev .
 $ docker run -d --name redis-1686647001746 redis
 
 # Execute o container da API com um prompt para navegação
-$ docker run -it --rm --link redis-1686647001746 -v $(pwd):/app -w /app --name dev-api-1686647001746 dev-image-1686647001746 sh
+$ docker run -it --rm -p 3000:3000 --link redis-1686647001746 -v $(pwd):/app -w /app --name dev-api-1686647001746 dev-image-1686647001746 sh
+
+# Dentro do container, instale as dependências do projeto
+$ npm install
 ```
 
-Dentro do container, execute comandos `npm` como, por exemplo, os testes:
+Dentro do container, você pode executar comandos do projeto, como por exemplo:
 
 ```bash
 # Testes unitários
@@ -50,7 +53,7 @@ $ npm run test:e2e
 # Cobertura de testes unitários
 $ npm run test:cov
 
-# Inicia o servidor
+# Inicia o servidor no endereço http://localhost:3000
 $ npm run start
 ```
 
@@ -79,7 +82,20 @@ $ docker build -t image-1686658208705 .
 $ docker run -d --name redis-1686658208705 redis
 
 # Execute o container da API e inicie o servidor
-$ docker run -it --rm -p 3000:3000 --link redis-1686647001746 --name api-1686658208705 image-1686658208705
+$ docker run -it --rm -p 3000:3000 --link redis-1686658208705 --name api-1686658208705 image-1686658208705
 ```
 
 A API estará disponível em `http://localhost:3000`.
+
+## Exemplos de requisições
+
+```bash
+# POST /customers
+$ curl -X POST -H "Content-Type: application/json" -H "Authorization: Bearer $TOKEN" -d '{"document":"321","name":"Maria Silva"}' "localhost:3000/customers"
+
+# GET /customers/:id
+$ curl -H "Authorization: Bearer $TOKEN" "localhost:3000/customers/49fe7f59-2677-49ea-a26a-56788a694859"
+
+# PUT /customers/:id
+$ curl -X PUT -H "Content-Type: application/json" -H "Authorization: Bearer $TOKEN" -d '{"id": "f53f423c-2b2c-4a7e-be06-4f52820774b3","document":"456","name":"Maria Silva"}' "localhost:3000/customers/49fe7f59-2677-49ea-a26a-56788a694859"
+```
