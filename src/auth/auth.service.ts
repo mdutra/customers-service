@@ -39,9 +39,12 @@ export class AuthService {
         throw new UnauthorizedException('Token is not valid');
       }
     } catch (err) {
-      if (isAxiosError(err) && !err.response && err.request) {
+      if (isAxiosError(err)) {
         this.logger.log(err);
-        throw new BadGatewayException('SSO unavailable');
+        if (!err.response && err.request) {
+          throw new BadGatewayException('SSO unavailable');
+        }
+        throw new UnauthorizedException('Try updating authorization token');
       }
 
       throw err;
