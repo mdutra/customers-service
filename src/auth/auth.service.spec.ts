@@ -8,7 +8,6 @@ import { AxiosError } from 'axios';
 
 describe('AuthService', () => {
   let service: AuthService;
-  let httpService: HttpService;
   let configService: ConfigService;
 
   beforeAll(async () => {
@@ -20,7 +19,6 @@ describe('AuthService', () => {
       .compile();
 
     service = module.get<AuthService>(AuthService);
-    httpService = module.get<HttpService>(HttpService);
     configService = module.get<ConfigService>(ConfigService);
   });
 
