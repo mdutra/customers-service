@@ -44,6 +44,8 @@ describe('AuthGuard', () => {
 
     const promise = guard.canActivate(contextMock({}));
 
-    expect(promise).rejects.toThrow('Unauthorized');
+    expect(promise).rejects.toThrow(
+      'Missing token in the Authorization header',
+    );
   });
 });

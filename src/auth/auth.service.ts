@@ -7,7 +7,7 @@ import {
   Logger,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { AxiosError } from 'axios';
+import { isAxiosError } from 'axios';
 
 @Injectable()
 export class AuthService {
@@ -16,7 +16,7 @@ export class AuthService {
   constructor(
     @Inject(ConfigService) private readonly configService: ConfigService,
     private readonly httpService: HttpService,
-  ) {}
+  ) { }
 
   async verify(token: string): Promise<void> {
     const url = this.configService.get<string>('SSO_VERIFY_TOKEN_URL');
@@ -36,10 +36,10 @@ export class AuthService {
       });
 
       if (!response.data.active) {
-        throw new UnauthorizedException();
+        throw new UnauthorizedException('Token is not valid');
       }
     } catch (err) {
-      if (err instanceof AxiosError) {
+      if (isAxiosError(err) && !err.response && err.request) {
         this.logger.log(err);
         throw new BadGatewayException('SSO unavailable');
       }

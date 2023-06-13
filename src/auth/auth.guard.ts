@@ -9,14 +9,16 @@ import { Request } from 'express';
 
 @Injectable()
 export class AuthGuard implements CanActivate {
-  constructor(private authService: AuthService) {}
+  constructor(private authService: AuthService) { }
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const req = context.switchToHttp().getRequest();
 
     const token = this.getTokenFromHeader(req);
     if (!token) {
-      throw new UnauthorizedException();
+      throw new UnauthorizedException(
+        'Missing token in the Authorization header',
+      );
     }
 
     await this.authService.verify(token);

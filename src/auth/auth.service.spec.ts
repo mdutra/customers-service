@@ -42,13 +42,15 @@ describe('AuthService', () => {
 
     const promise = service.verify('abc');
 
-    expect(promise).rejects.toThrow('Unauthorized');
+    expect(promise).rejects.toThrow('Token is not valid');
   });
 
   it('should throw SSO unavailable', () => {
     jest.spyOn(configService, 'get').mockReturnValue('');
     axiosMock.axiosRef.mockImplementationOnce(() => {
-      throw new AxiosError();
+      const err = new AxiosError();
+      err.request = true;
+      throw err;
     });
 
     const promise = service.verify('abc');
