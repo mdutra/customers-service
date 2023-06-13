@@ -1,9 +1,16 @@
-import { Injectable, Inject, BadGatewayException } from '@nestjs/common';
+import {
+  Injectable,
+  Inject,
+  BadGatewayException,
+  Logger,
+} from '@nestjs/common';
 import Redis, { ReplyError } from 'ioredis';
 import { v4 as uuidv4 } from 'uuid';
 
 @Injectable()
 export class RedisService {
+  private readonly logger = new Logger(RedisService.name);
+
   constructor(@Inject('REDIS_CLIENT') private readonly redisClient: Redis) {}
 
   async getHash<T>(prefix: string, key: string): Promise<T> {
@@ -13,7 +20,8 @@ export class RedisService {
       return this.redisClient.hgetall(`${prefix}:${key}`) as T;
     } catch (err) {
       if (err instanceof ReplyError) {
-        console.warn(`type of ${key} is not a hash`);
+        this.logger.log(`type of ${key} is not a hash`);
+
         return null;
       } else {
         throw err;
