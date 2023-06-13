@@ -41,19 +41,29 @@ describe('general requests (e2e)', () => {
       .get(`/customers/${id}`)
       .set('Authorization', 'Bearer abc')
       .expect(401)
-      .expect({ statusCode: 401, message: 'Unauthorized' });
+      .expect({
+        statusCode: 401,
+        message: 'Token is not valid',
+        error: 'Unauthorized',
+      });
   });
 
   it('should not authorize (401) if token was not set', () => {
     return request(app.getHttpServer())
       .get(`/customers/${id}`)
       .expect(401)
-      .expect({ statusCode: 401, message: 'Unauthorized' });
+      .expect({
+        statusCode: 401,
+        message: 'Missing token in the Authorization header',
+        error: 'Unauthorized',
+      });
   });
 
   it('should return 502 - SSO unavailable', () => {
     axiosMock.axiosRef.mockImplementationOnce(() => {
-      throw new AxiosError();
+      const err = new AxiosError();
+      err.request = true;
+      throw err;
     });
 
     return request(app.getHttpServer())
